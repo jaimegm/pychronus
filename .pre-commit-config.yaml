@@ -1,0 +1,30 @@
+default_stages: [commit, push]
+default_language_version:
+  python: python3
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: debug-statements
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.12
+    hooks:
+      - id: terraform-fmt
+        args: ["-recursive"]
+  - repo: https://github.com/pycqa/isort
+    rev: 5.9.2
+    hooks:
+      - id: isort
+        additional_dependencies: [toml]
+  - repo: https://github.com/ambv/black
+    rev: 21.7b0
+    hooks:
+      - id: black
+        language_version: python3.8
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
