@@ -16,6 +16,7 @@ cryptography = "^3.3.1"
 pandas-gbq = "<0.15.0"
 sqlalchemy = "1.3.18"
 requests = "^2.20"
+pyarrow = "4.0.1"
 psycopg2 = "^2.8"
 pandas = "^1.2"
 
