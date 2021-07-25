@@ -6,32 +6,40 @@ import pandas as pd
 from airflow.hooks.base import BaseHook
 from binance.client import Client
 
+from pychronus.hooks.db_manager import DB_Manager
+
 credential_path = "/root/creds/binance.json"
 archive_location = "/Users/jaime/code/projects/crypto"
-
-interested_cryptos = [
-    "USDT",
-    "EUR",
-    "USDC",
-    "BUSD",
-    "BTC",
-    "ETH",
-    "DOT",
-    "BNB",
-    "MATIC",
-    "UNI",
-    "YFI",
-    "ADA",
-    "EGLD",
-]
 
 
 class Binance(BaseHook):
     def __init__(self, pair):
-        self.creds = None
         self.pair = pair
         self._client = None
+        self.creds = None
+        self._db = None
         self.fiats = ["USD", "EUR", "USDT", "USDC"]
+        self.interested_cryptos = [
+            "USDT",
+            "EUR",
+            "USDC",
+            "BUSD",
+            "BTC",
+            "ETH",
+            "DOT",
+            "BNB",
+            "MATIC",
+            "UNI",
+            "YFI",
+            "ADA",
+            "EGLD",
+        ]
+
+    @property
+    def db(self):
+        if self._db is None:
+            self._db = DB_Manager()
+        return self._db
 
     @property
     def client(self):
@@ -52,8 +60,8 @@ class Binance(BaseHook):
         col_names = {"symbol": "pair", "baseAsset": "base", "quoteAsset": "target"}
         coin_df = coin_df.rename(columns=col_names)
         # Exclude Pairs I dont use
-        coin_df = coin_df[coin_df["base"].isin(interested_crypto)]
-        coin_df = coin_df[coin_df["target"].isin(interested_crypto)]
+        coin_df = coin_df[coin_df["base"].isin(self.interested_crypto)]
+        coin_df = coin_df[coin_df["target"].isin(self.interested_crypto)]
         return coin_df
 
     def determine_interval(self, interval):
@@ -167,6 +175,7 @@ class Binance(BaseHook):
             quantity=100,
             price="0.00001",
         )
+        return order
 
     def create_oco_order(self, side_sell, time_in_force):
         order = self.client.create_oco_order(
@@ -179,19 +188,20 @@ class Binance(BaseHook):
         )
         return order
 
-    def create_oco_buy(self, side_sell, time_in_force):
+    def create_oco_buy(self, side_sell, quantity, price, time_in_force):
         params = {
             "symbol": self.pair,
             "quantity": quantity,
             "price": price,
-            #'limitIcebergQty': limit_maker 'Used to make the LIMIT_MAKER leg an iceberg order.',
-            #'stopPrice': stop_price,
-            #'stopIcebergQty': stop_ice_qty #'Used with STOP_LOSS_LIMIT leg to make an iceberg order.',
+            # 'limitIcebergQty': limit_maker 'Used to make the LIMIT_MAKER leg an iceberg order.',
+            # 'stopPrice': stop_price,
+            # 'stopIcebergQty': stop_ice_qty #'Used with STOP_LOSS_LIMIT leg to make an iceberg order.',
             "stopLimitPrice": "If provided, stopLimitTimeInForce is required.",
             "stopLimitTimeInForce": "GTC",  # 'Valid values are GTC/FOK/IOC.'
             "newOrderRespType": "JSON",
             "recvWindow": "the number of milliseconds the request is valid for",
         }
+        logging.info(params)
         order = self.client.create_oco_order(
             symbol=self.pair,
             side=side_sell,
@@ -240,11 +250,11 @@ class Binance(BaseHook):
         end = self.parse_date(end, "%d %b, %Y")
         return f"{self.pair}_{start}_to_{end}.csv"
 
-    def upload(self):
+    def upload(self, df):
         table_name = f"{self.pair}_{self.pair}"
-        dot_candles.to_sql(
-            "dot_4h",
-            con=engine,
+        df.to_sql(
+            table_name,
+            con=self.db.engine,
             schema="public",
             if_exists="replace",
             chunksize=1000,

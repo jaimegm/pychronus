@@ -4,6 +4,7 @@ import json
 import logging
 import os.path
 import time
+from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
@@ -71,7 +72,7 @@ class Gmail(BaseHook):
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    "credentials.json", SCOPES
+                    "credentials.json", self.scopes
                 )
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
@@ -150,7 +151,3 @@ class Gmail(BaseHook):
             logging.info("Cleaned Spam Folder")
         else:
             logging.info("All good in the hood!")
-
-
-deposits = PyMail().get_binance_deposits()
-deposits
