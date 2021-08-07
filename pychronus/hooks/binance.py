@@ -3,43 +3,37 @@ import logging
 from datetime import datetime
 
 import pandas as pd
-from airflow.hooks.base import BaseHook
 from binance.client import Client
 
-from pychronus.hooks.db_manager import DB_Manager
+from pychronus.hooks.dbmanager import DBManager
 
 credential_path = "/root/creds/binance.json"
 archive_location = "/Users/jaime/code/projects/crypto"
 
+interested_cryptos = [
+    "USDT",
+    "EUR",
+    "USDC",
+    "BUSD",
+    "BTC",
+    "ETH",
+    "DOT",
+    "BNB",
+    "MATIC",
+    "UNI",
+    "YFI",
+    "ADA",
+    "EGLD",
+]
 
-class Binance(BaseHook):
+
+class PyTrader:
     def __init__(self, pair):
-        self.pair = pair
+        self._dbmanager = None
         self._client = None
         self.creds = None
-        self._db = None
+        self.pair = pair
         self.fiats = ["USD", "EUR", "USDT", "USDC"]
-        self.interested_cryptos = [
-            "USDT",
-            "EUR",
-            "USDC",
-            "BUSD",
-            "BTC",
-            "ETH",
-            "DOT",
-            "BNB",
-            "MATIC",
-            "UNI",
-            "YFI",
-            "ADA",
-            "EGLD",
-        ]
-
-    @property
-    def db(self):
-        if self._db is None:
-            self._db = DB_Manager()
-        return self._db
 
     @property
     def client(self):
@@ -48,6 +42,12 @@ class Binance(BaseHook):
             key = json.loads(open(credential_path, "r").read())
             self._client = Client(key["client_id"], key["secret"])
         return self._client
+
+    @property
+    def dbmanager(self):
+        if self._dbmanager is None:
+            self._dbmanager = DBManager(df=pd.DataFrame(), tablename="1h", schema="dot")
+        return self._dbmanager
 
     def get_pairs(self):
         coins = self.client.get_exchange_info()
@@ -60,28 +60,28 @@ class Binance(BaseHook):
         col_names = {"symbol": "pair", "baseAsset": "base", "quoteAsset": "target"}
         coin_df = coin_df.rename(columns=col_names)
         # Exclude Pairs I dont use
-        coin_df = coin_df[coin_df["base"].isin(self.interested_crypto)]
-        coin_df = coin_df[coin_df["target"].isin(self.interested_crypto)]
+        coin_df = coin_df[coin_df["base"].isin(interested_cryptos)]
+        coin_df = coin_df[coin_df["target"].isin(interested_cryptos)]
         return coin_df
 
     def determine_interval(self, interval):
-        if interval == "1h":
-            intrvl = self.client.KLINE_INTERVAL_1HOUR
-        elif interval == "2h":
-            intrvl = self.client.KLINE_INTERVAL_2HOUR
-        elif interval == "4h":
-            intrvl = self.client.KLINE_INTERVAL_4HOUR
-        elif interval == "5m":
-            intrvl = self.client.KLINE_INTERVAL_5MINUTE
-        elif interval == "15m":
-            intrvl = self.client.KLINE_INTERVAL_15MINUTE
-        elif interval == "30m":
-            intrvl = self.client.KLINE_INTERVAL_30MINUTE
-        elif interval == "1m":
-            intrvl = self.client.KLINE_INTERVAL_1MINUTE
-        else:
-            raise ValueError(f"Check Interval Assignment: {interval}")
-        return intrvl
+        try:
+            return {
+                "1h": self.client.KLINE_INTERVAL_1HOUR,
+                "2h": self.client.KLINE_INTERVAL_2HOUR,
+                "4h": self.client.KLINE_INTERVAL_4HOUR,
+                "5m": self.client.KLINE_INTERVAL_5MINUTE,
+                "15m": self.client.KLINE_INTERVAL_15MINUTE,
+                "30m": self.client.KLINE_INTERVAL_30MINUTE,
+                "1m": self.client.KLINE_INTERVAL_1MINUTE,
+            }[interval]
+        except KeyError:
+            raise KeyError(f"Check Interval Assignment: {interval}")
+
+    def generate_timeframe(self):
+        start = self.dbmanager.get_last_updated_at().strftime("%d %b, %Y")
+        end = datetime.utcnow().strftime("%d %b, %Y")
+        return f"{start}::{end}"
 
     def get_candlesticks(self, timeframe, interval="1h"):
         # Ex 1 Apr, 2017::1 Feb, 2021
@@ -167,7 +167,7 @@ class Binance(BaseHook):
         return order
 
     def test_order(self, side_buy, order_type_limit, time_in_force):
-        order = self.client.create_test_order(
+        return self.client.create_test_order(
             symbol=self.pair,
             side=side_buy,
             type=order_type_limit,
@@ -175,7 +175,6 @@ class Binance(BaseHook):
             quantity=100,
             price="0.00001",
         )
-        return order
 
     def create_oco_order(self, side_sell, time_in_force):
         order = self.client.create_oco_order(
@@ -188,11 +187,11 @@ class Binance(BaseHook):
         )
         return order
 
-    def create_oco_buy(self, side_sell, quantity, price, time_in_force):
-        params = {
+    def create_oco_buy(self, side_sell, time_in_force):
+        {
             "symbol": self.pair,
-            "quantity": quantity,
-            "price": price,
+            # "quantity": quantity,
+            # "price": price,
             # 'limitIcebergQty': limit_maker 'Used to make the LIMIT_MAKER leg an iceberg order.',
             # 'stopPrice': stop_price,
             # 'stopIcebergQty': stop_ice_qty #'Used with STOP_LOSS_LIMIT leg to make an iceberg order.',
@@ -201,7 +200,6 @@ class Binance(BaseHook):
             "newOrderRespType": "JSON",
             "recvWindow": "the number of milliseconds the request is valid for",
         }
-        logging.info(params)
         order = self.client.create_oco_order(
             symbol=self.pair,
             side=side_sell,
@@ -254,8 +252,8 @@ class Binance(BaseHook):
         table_name = f"{self.pair}_{self.pair}"
         df.to_sql(
             table_name,
-            con=self.db.engine,
-            schema="public",
+            con=self.dbmanager.engine,
+            schema=self.schema,
             if_exists="replace",
             chunksize=1000,
             index=False,

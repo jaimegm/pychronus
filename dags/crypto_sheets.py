@@ -1,16 +1,11 @@
-
 import logging
-
-from datetime import timedelta
-from datetime import datetime
-
-from airflow.operators.python_operator import ShortCircuitOperator
-from airflow.operators.python_operator import PythonOperator
-from pychronus.hooks.gsheet import GSheetHook
-
-from airflow import DAG
+from datetime import datetime, timedelta
 
 import pandas as pd
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator, ShortCircuitOperator
+
+from pychronus.hooks.gsheet import GSheetHook
 
 default_args = {
     "owner": "Jaime",
@@ -47,9 +42,9 @@ def check_doc(sheet_id, cell):
 
 def activate(orgs):
     gsheet = GSheetHook()
-    drp_line_items = gsheet.get_values_df(
-        "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List!A1:C"
-    )
+    # drp_line_items = gsheet.get_values_df(
+    #    "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List!A1:C"
+    # )
     # Loop through item updates
     update_status = list()
     last_completed_run = datetime.now()
@@ -64,8 +59,10 @@ def activate(orgs):
     gsheet.write_values(
         "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List", df, "E1"
     )
+    gsheet.write_values(
+        "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List", logs, "E1"
+    )
     logging.info("Updated Google doc with latest pipeline status")
-
 
 
 with dag:

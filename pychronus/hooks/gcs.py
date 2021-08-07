@@ -21,13 +21,9 @@ import gzip as gz
 import os
 import shutil
 import warnings
-
 from io import BytesIO
 from os import path
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Union
+from typing import Optional, Set, Tuple, Union
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException

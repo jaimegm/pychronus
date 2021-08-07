@@ -1,19 +1,12 @@
-import os
-import shutil
 import logging
+import os
 import tempfile
-
-from datetime import datetime
-from typing import Dict
-from typing import Union
-from typing import Optional
 
 from airflow.models import Variable
 from google.cloud import bigquery
+
 from pychronus.hooks.gcs import GCSHook
 from pychronus.hooks.gsheet import GSheetHook
-from jinja2 import Template
-
 
 
 # Quickly delete a object on GCS
@@ -36,7 +29,7 @@ def df_to_gcs(df, bucket_name, object_name, mode="bool"):
         logging.info("Standard Load Method")
     elif mode == "datalake":
         logging.info("Datalake Load Method")
-        object_name = build_datalake_gcs_path(object_name)
+        # object_name = build_datalake_gcs_path(object_name)
     else:
         raise ValueError("df_to_gcs load method Not Defined")
     logging.info("Trying to execute: {} :: {}".format(bucket_name, object_name))

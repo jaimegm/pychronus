@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import json
 import logging
 import os.path
@@ -9,6 +7,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 from airflow.hooks.base import BaseHook
+from airflow.models.connection import Connection
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -19,7 +18,8 @@ credentials_path = "/root/creds/gmail.json"
 
 
 class Gmail(BaseHook):
-    def __init__(self, userId="me"):
+    def __init__(self, userId="me", conn_id="gmail"):
+        self.conn_id = conn_id
         self.scopes = ["https://mail.google.com/"]
         self._service = None
         self.userId = userId
@@ -43,6 +43,9 @@ class Gmail(BaseHook):
             json.dump(json_object, file)
             file.close()
         return json_object
+
+    def get_conn(self) -> Connection:
+        return self.get_connection(self.conn_id)
 
     def get_token(self):
 
