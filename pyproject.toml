@@ -19,6 +19,7 @@ requests = "^2.20"
 pyarrow = "4.0.1"
 psycopg2 = "^2.8"
 pandas = "^1.2"
+Twisted = "^21.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
