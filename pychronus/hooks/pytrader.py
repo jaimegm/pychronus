@@ -112,6 +112,7 @@ class PyTrader:
         df = df.drop(columns=["ign"])
         df["pair"] = self.pair
         df["interval"] = interval
+        df["uuid"] = df.apply(lambda x: f"{int(time.mktime(x.open_time.timetuple()))}-{int(time.mktime(x.close_time.timetuple()))}", axis=1)
         return df
 
     def get_spot(self):

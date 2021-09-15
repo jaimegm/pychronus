@@ -67,6 +67,12 @@ class DBManager(BaseHook):
         'information_schema', 'public')"""
         return self.query(query)
 
+    def list_tables(self):
+        query = Template("""SELECT * FROM information_schema.tables 
+        WHERE table_schema = '{{ schema }}' 
+        """).render({"schema": self.schema})
+        return self.query(query)
+
     def upload(self, df: pd.DataFrame):
         df.to_sql(
             name=self.tablename,
