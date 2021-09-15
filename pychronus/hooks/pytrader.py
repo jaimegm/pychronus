@@ -46,7 +46,7 @@ class PyTrader:
     @property
     def dbmanager(self):
         if self._dbmanager is None:
-            self._dbmanager = DBManager(df=pd.DataFrame(), tablename="1h", schema="dot")
+            self._dbmanager = DBManager(tablename="1h", schema=self.pair.lower())
         return self._dbmanager
 
     def get_pairs(self):
@@ -188,6 +188,7 @@ class PyTrader:
         return order
 
     def create_oco_buy(self, side_sell, time_in_force):
+        """
         {
             "symbol": self.pair,
             # "quantity": quantity,
@@ -200,6 +201,7 @@ class PyTrader:
             "newOrderRespType": "JSON",
             "recvWindow": "the number of milliseconds the request is valid for",
         }
+        """
         order = self.client.create_oco_order(
             symbol=self.pair,
             side=side_sell,
@@ -212,14 +214,7 @@ class PyTrader:
         return order
 
     def create_oco_sell(self, side_sell, time_in_force):
-        order = self.client.create_oco_order(
-            symbol=self.pair,
-            side=side_sell,
-            stopLimitTimeInForce=time_in_force,
-            quantity=100,
-            stopPrice="0.00001",
-            price="0.00002",
-        )
+        """
         {
             "limitIcebergQty": "Used to make the LIMIT_MAKER leg an iceberg order.",
             "stopPrice": "required",
@@ -229,6 +224,15 @@ class PyTrader:
             "newOrderRespType": "JSON",
             "recvWindow": "the number of milliseconds the request is valid for",
         }
+        """
+        order = self.client.create_oco_order(
+            symbol=self.pair,
+            side=side_sell,
+            stopLimitTimeInForce=time_in_force,
+            quantity=100,
+            stopPrice="0.00001",
+            price="0.00002",
+        )
         return order
 
     def get_lending_products(self):

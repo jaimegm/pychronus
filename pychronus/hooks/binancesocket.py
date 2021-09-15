@@ -5,7 +5,7 @@ import random
 from binance import ThreadedWebsocketManager
 from binance.client import Client
 from twisted.internet import reactor
-
+from datetime import datetime, timedelta
 from pychronus.utils.misc import goodbyes, hellos, managers
 
 
@@ -17,6 +17,8 @@ class BinanceSocket:
         self._manager = None
         self._client = None
         self.streams = []
+        self.data = []
+        self.messages = {"created": None, "messages": self.data}
 
     @property
     def client(self):
@@ -36,6 +38,16 @@ class BinanceSocket:
             logging.info(f"{self.rando(hellos)}, It's {manager}")
         return self._manager
 
+    def message_manager(self):
+        # generate new orb
+        if self.messages is None or self.messages.get("created") - datetime.now() <= 30:
+            self.data = []
+            self.messages = {"created": datetime.now(), "messages": self.data}
+            return self.messages
+        # Re-use
+        else:
+            return self.messages
+
     def start(self):
         self.manager.start()
 
@@ -45,7 +57,7 @@ class BinanceSocket:
     def message_processor(self, msg):
         """define how to process incoming WebSocket messages"""
         if msg["e"] != "error":
-            print({"best_bid": msg["b"], "best_ask": msg["a"], "close?": msg["c"]})
+            self.data.append({"best_bid": msg["b"], "best_ask": msg["a"], "close?": msg["c"]})
             self.thread_state["error"] = False
         else:
             self.thread_state["error"] = True
@@ -65,7 +77,6 @@ class BinanceSocket:
             self.manager.start_kline_socket(
                 symbol=self.pair, callback=self.message_processor
             )
-            # conn_key = bm.start_kline_socket('BNBBTC', message_processor, interval=KLINE_INTERVAL_30MINUTE)
         elif socket_type == "depth":
             self.manager.start_depth_socket(
                 symbol=self.pair, callback=self.message_processor

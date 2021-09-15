@@ -24,6 +24,10 @@ dag = DAG(
     max_active_runs=1,
 )
 
+gconfig = {
+    "sheetid":" 1O5z9l_u26oYrVWpdxILqE4Pc3mCsYuFgnNGp9KdMULw",
+    "range": "Command Test!A1:F",
+}
 
 # Check Google doc for updates
 def check_doc(sheet_id, cell):
@@ -40,45 +44,34 @@ def check_doc(sheet_id, cell):
         return False
 
 
-def activate(orgs):
+def make_order():
     gsheet = GSheetHook()
-    # drp_line_items = gsheet.get_values_df(
-    #    "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List!A1:C"
-    # )
-    # Loop through item updates
-    update_status = list()
-    last_completed_run = datetime.now()
-    update_ui = {
+    df = pd.DataFrame({
         "command": ["Items have be updated"],
-        "last_run": [str(last_completed_run)],
+        "last_run": [str(datetime.now())],
         "last state": ["Pushed Items"],
-    }
-    df = pd.DataFrame(update_ui)
-    logs = pd.DataFrame(update_status, columns=["Status", "log"])
+    })
     # Update Google Doc
     gsheet.write_values(
         "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List", df, "E1"
-    )
-    gsheet.write_values(
-        "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List", logs, "E1"
     )
     logging.info("Updated Google doc with latest pipeline status")
 
 
 with dag:
+
     check_status_sheet = ShortCircuitOperator(
         task_id="Check_Status_Sheet",
         python_callable=check_doc,
         op_kwargs={
-            "sheet_id": "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8",
-            "cell": "Items!E1:E2",
+            "sheet_id": gconfig["sheetid"]
+            "cell": gconfig["range"]
         },
     )
 
-    change_status = PythonOperator(
+    make_move = PythonOperator(
         task_id="Update_Items",
-        python_callable=activate,
-        op_kwargs={"orgs": "92164512"},
+        python_callable=make_order,
     )
 
     check_status_sheet >> change_status
