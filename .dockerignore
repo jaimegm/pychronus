@@ -1,0 +1,5 @@
+connections.json
+variables.json
+*.tfstate
+*.ipynb
+account.json
