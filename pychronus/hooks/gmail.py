@@ -130,18 +130,7 @@ class Gmail(BaseHook):
             time.sleep(1)
         return pd.DataFrame(goods)
 
-    def clean_spam(self):
-        spammed_emails = [
-            "in:spam drive-shares-noreply@google.com",
-            "in:spam no-reply@sharepointonline.com",
-            "in:spam googlegroups",
-            "in:spam whatsapp",
-            "in:spam female",
-            "in:spam online",
-            "in:spam meet",
-            "in:spam girl",
-            "in:spam looking",
-        ]
+    def clean_spam(self, spammed_emails):
         spam_ids = []
         for spam_query in spammed_emails:
             spam = self.search(spam_query)

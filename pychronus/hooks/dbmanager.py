@@ -8,16 +8,14 @@ from sqlalchemy import create_engine
 class DBManager(BaseHook):
     def __init__(
         self,
-        df: pd.DataFrame,
         tablename: str,
         schema: str = "public",
-        conn_id="postgres",
+        conn_id: str = "postgres",
     ):
         self.tablename = tablename
         self.conn_id = conn_id
         self.schema = schema
         self._engine = None
-        self.df = df
 
     @property
     def engine(self):
@@ -34,6 +32,7 @@ class DBManager(BaseHook):
         return pd.read_sql_query(sql=query, con=self.engine)
 
     def table_exists(self):
+        self.log.info(f"Checking for {self.schema}.{self.tablename}")
         query = Template(
             """
         SELECT EXISTS(
@@ -45,7 +44,8 @@ class DBManager(BaseHook):
         ).render({"schema": self.schema, "tablename": self.tablename})
         return self.query(query).iloc[0][0]
 
-    def get_last_updated_at(self):
+    def get_last_updated_at(self, updated_at="open_time"):
+        self.log.info(f"Extracting Last Updated at: {updated_at}")
         query = Template(
             """
         SELECT MAX({{ updated_at }})
@@ -55,7 +55,7 @@ class DBManager(BaseHook):
             {
                 "schema": self.schema,
                 "tablename": self.tablename,
-                "updated_at": "open_time",
+                "updated_at": updated_at,
             }
         )
         return self.query(query).iloc[0][0]
@@ -67,12 +67,20 @@ class DBManager(BaseHook):
         'information_schema', 'public')"""
         return self.query(query)
 
-    def upload(self, df):
-        self.df.to_sql(
+    def list_tables(self):
+        query = Template(
+            """SELECT * FROM information_schema.tables
+        WHERE table_schema = '{{ schema }}'
+        """
+        ).render({"schema": self.schema})
+        return self.query(query)
+
+    def upload(self, df: pd.DataFrame):
+        df.to_sql(
             name=self.tablename,
             con=self.engine,
             schema=self.schema,
-            if_exists="replace",
+            if_exists="append" if self.table_exists() else "replace",
             chunksize=1000,
             index=False,
             index_label=None,
