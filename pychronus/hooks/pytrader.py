@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -28,9 +29,10 @@ interested_cryptos = [
 
 
 class PyTrader:
-    def __init__(self, pair):
+    def __init__(self, pair, interval):
         self._dbmanager = None
         self._client = None
+        self.interval = interval
         self.creds = None
         self.pair = pair
         self.fiats = ["USD", "EUR", "USDT", "USDC"]
@@ -64,9 +66,10 @@ class PyTrader:
         coin_df = coin_df[coin_df["target"].isin(interested_cryptos)]
         return coin_df
 
-    def determine_interval(self, interval):
+    def get_interval(self):
         try:
             return {
+                "1d": self.client.KLINE_INTERVAL_1DAY,
                 "1h": self.client.KLINE_INTERVAL_1HOUR,
                 "2h": self.client.KLINE_INTERVAL_2HOUR,
                 "4h": self.client.KLINE_INTERVAL_4HOUR,
@@ -74,9 +77,9 @@ class PyTrader:
                 "15m": self.client.KLINE_INTERVAL_15MINUTE,
                 "30m": self.client.KLINE_INTERVAL_30MINUTE,
                 "1m": self.client.KLINE_INTERVAL_1MINUTE,
-            }[interval]
+            }[self.interval]
         except KeyError:
-            raise KeyError(f"Check Interval Assignment: {interval}")
+            raise KeyError(f"Check Interval Assignment: {self.interval}")
 
     def generate_timeframe(self):
         start = self.dbmanager.get_last_updated_at().strftime("%d %b, %Y")
@@ -87,9 +90,8 @@ class PyTrader:
         # Ex 1 Apr, 2017::1 Feb, 2021
         intrvs = timeframe.split("::")
         logging.info(f"Extracting {self.pair} Candlesticks: {timeframe}")
-        intrvl = self.determine_interval(interval)
         klines = self.client.get_historical_klines(
-            self.pair, intrvl, intrvs[0], intrvs[-1]
+            self.pair, self.get_interval(), intrvs[0], intrvs[-1]
         )
         logging.info("Converting response to DataFrame")
         col_names = [
@@ -112,7 +114,10 @@ class PyTrader:
         df = df.drop(columns=["ign"])
         df["pair"] = self.pair
         df["interval"] = interval
-        df["uuid"] = df.apply(lambda x: f"{int(time.mktime(x.open_time.timetuple()))}-{int(time.mktime(x.close_time.timetuple()))}", axis=1)
+        df["uuid"] = df.apply(
+            lambda x: f"{int(time.mktime(x.open_time.timetuple()))}-{int(time.mktime(x.close_time.timetuple()))}",
+            axis=1,
+        )
         return df
 
     def get_spot(self):

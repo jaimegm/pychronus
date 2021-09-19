@@ -10,7 +10,7 @@ class DBManager(BaseHook):
         self,
         tablename: str,
         schema: str = "public",
-        conn_id: str ="postgres",
+        conn_id: str = "postgres",
     ):
         self.tablename = tablename
         self.conn_id = conn_id
@@ -68,9 +68,11 @@ class DBManager(BaseHook):
         return self.query(query)
 
     def list_tables(self):
-        query = Template("""SELECT * FROM information_schema.tables 
-        WHERE table_schema = '{{ schema }}' 
-        """).render({"schema": self.schema})
+        query = Template(
+            """SELECT * FROM information_schema.tables
+        WHERE table_schema = '{{ schema }}'
+        """
+        ).render({"schema": self.schema})
         return self.query(query)
 
     def upload(self, df: pd.DataFrame):
@@ -78,7 +80,7 @@ class DBManager(BaseHook):
             name=self.tablename,
             con=self.engine,
             schema=self.schema,
-            if_exists="append"if self.table_exists() else "replace",
+            if_exists="append" if self.table_exists() else "replace",
             chunksize=1000,
             index=False,
             index_label=None,

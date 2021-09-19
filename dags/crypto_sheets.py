@@ -24,10 +24,12 @@ dag = DAG(
     max_active_runs=1,
 )
 
+
 gconfig = {
-    "sheetid":" 1O5z9l_u26oYrVWpdxILqE4Pc3mCsYuFgnNGp9KdMULw",
+    "sheetid": "1O5z9l_u26oYrVWpdxILqE4Pc3mCsYuFgnNGp9KdMULw",
     "range": "Command Test!A1:F",
 }
+
 
 # Check Google doc for updates
 def check_doc(sheet_id, cell):
@@ -46,11 +48,13 @@ def check_doc(sheet_id, cell):
 
 def make_order():
     gsheet = GSheetHook()
-    df = pd.DataFrame({
-        "command": ["Items have be updated"],
-        "last_run": [str(datetime.now())],
-        "last state": ["Pushed Items"],
-    })
+    df = pd.DataFrame(
+        {
+            "command": ["Items have be updated"],
+            "last_run": [str(datetime.now())],
+            "last state": ["Pushed Items"],
+        }
+    )
     # Update Google Doc
     gsheet.write_values(
         "1zd71mM1UKsNlTQBBW7qeqJ-1oPKg_StjB70N-kcBVD8", "DRP_List", df, "E1"
@@ -63,10 +67,7 @@ with dag:
     check_status_sheet = ShortCircuitOperator(
         task_id="Check_Status_Sheet",
         python_callable=check_doc,
-        op_kwargs={
-            "sheet_id": gconfig["sheetid"]
-            "cell": gconfig["range"]
-        },
+        op_kwargs={"sheet_id": gconfig["sheetid"], "cell": gconfig["range"]},
     )
 
     make_move = PythonOperator(
@@ -74,4 +75,4 @@ with dag:
         python_callable=make_order,
     )
 
-    check_status_sheet >> change_status
+    check_status_sheet >> make_move
