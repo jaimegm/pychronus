@@ -11,8 +11,10 @@ class DBManager(BaseHook):
         tablename: str,
         schema: str = "public",
         conn_id: str = "postgres",
+        database: str = "cryptos",
     ):
         self.tablename = tablename
+        self.database = database
         self.conn_id = conn_id
         self.schema = schema
         self._engine = None
@@ -21,7 +23,7 @@ class DBManager(BaseHook):
     def engine(self):
         conn = self.get_conn()
         if self._engine is None:
-            db_url = f"postgresql+psycopg2://{conn.login}:{conn.password}@{conn.host}:5432/cryptos"
+            db_url = f"postgresql+psycopg2://{conn.login}:{conn.password}@{conn.host}:5432/{self.database}"
             self._engine = create_engine(db_url)
         return self._engine
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -33,9 +32,9 @@ from grow_with_the_flow.hooks.cloud_base_hook import GoogleCloudBaseHook
 
 
 class GCSHook(GoogleCloudBaseHook):
-    """
-    Interact with Google Cloud Storage. This hook uses the Google Cloud Platform
-    connection.
+    """Interact with Google Cloud Storage.
+
+    This hook uses the Google Cloud Platform connection.
     """
 
     _conn = None  # type: Optional[storage.Client]
@@ -83,8 +82,8 @@ class GCSHook(GoogleCloudBaseHook):
         destination_bucket=None,
         destination_object=None,
     ):
-        """
-        Copies an object from a bucket to another, with renaming if requested.
+        """Copies an object from a bucket to another, with renaming if requested.
+
         destination_bucket or destination_object can be omitted, in which case
         source bucket/object is used, but not both.
         :param source_bucket: The bucket of the object to copy from.
@@ -132,10 +131,9 @@ class GCSHook(GoogleCloudBaseHook):
     def rewrite(
         self, source_bucket, source_object, destination_bucket, destination_object=None
     ):
-        """
-        Has the same functionality as copy, except that will work on files
-        over 5 TB, as well as when copying between locations and/or storage
-        classes.
+        """Has the same functionality as copy, except that will work on files over 5 TB,
+        as well as when copying between locations and/or storage classes.
+
         destination_object can be omitted, in which case source_object is used.
         :param source_bucket: The bucket of the object to copy from.
         :type source_bucket: str
@@ -187,8 +185,8 @@ class GCSHook(GoogleCloudBaseHook):
         )
 
     def download(self, bucket_name, object_name, filename=None):
-        """
-        Downloads a file from Google Cloud Storage.
+        """Downloads a file from Google Cloud Storage.
+
         When no filename is supplied, the operator loads the file into memory and returns its
         content. When a filename is supplied, it writes the file to the specified location and
         returns the location. For file sizes that exceed the available memory it is recommended
@@ -221,8 +219,8 @@ class GCSHook(GoogleCloudBaseHook):
         gzip: bool = False,
         encoding: str = "utf-8",
     ) -> None:
-        """
-        Uploads a local file or file data as string or bytes to Google Cloud Storage.
+        """Uploads a local file or file data as string or bytes to Google Cloud Storage.
+
         :param bucket_name: The bucket to upload to.
         :type bucket_name: str
         :param object_name: The object name to set when uploading the file.
@@ -288,8 +286,8 @@ class GCSHook(GoogleCloudBaseHook):
             )
 
     def exists(self, bucket_name, object_name):
-        """
-        Checks for the existence of a file in Google Cloud Storage.
+        """Checks for the existence of a file in Google Cloud Storage.
+
         :param bucket_name: The Google cloud storage bucket where the object is.
         :type bucket_name: str
         :param object_name: The name of the blob_name to check in the Google cloud
@@ -302,8 +300,8 @@ class GCSHook(GoogleCloudBaseHook):
         return blob.exists()
 
     def is_updated_after(self, bucket_name, object_name, ts):
-        """
-        Checks if an blob_name is updated in Google Cloud Storage.
+        """Checks if an blob_name is updated in Google Cloud Storage.
+
         :param bucket_name: The Google cloud storage bucket where the object is.
         :type bucket_name: str
         :param object_name: The name of the object to check in the Google cloud
@@ -337,8 +335,8 @@ class GCSHook(GoogleCloudBaseHook):
         return False
 
     def delete(self, bucket_name, object_name):
-        """
-        Deletes an object from the bucket.
+        """Deletes an object from the bucket.
+
         :param bucket_name: name of the bucket, where the object resides
         :type bucket_name: str
         :param object_name: name of the object to delete
@@ -400,8 +398,8 @@ class GCSHook(GoogleCloudBaseHook):
         return ids
 
     def get_size(self, bucket_name, object_name):
-        """
-        Gets the size of a file in Google Cloud Storage.
+        """Gets the size of a file in Google Cloud Storage.
+
         :param bucket_name: The Google cloud storage bucket where the blob_name is.
         :type bucket_name: str
         :param object_name: The name of the object to check in the Google
@@ -421,8 +419,8 @@ class GCSHook(GoogleCloudBaseHook):
         return blob_size
 
     def get_crc32c(self, bucket_name, object_name):
-        """
-        Gets the CRC32c checksum of an object in Google Cloud Storage.
+        """Gets the CRC32c checksum of an object in Google Cloud Storage.
+
         :param bucket_name: The Google cloud storage bucket where the blob_name is.
         :type bucket_name: str
         :param object_name: The name of the object to check in the Google cloud
@@ -442,8 +440,8 @@ class GCSHook(GoogleCloudBaseHook):
         return blob_crc32c
 
     def get_md5hash(self, bucket_name, object_name):
-        """
-        Gets the MD5 hash of an object in Google Cloud Storage.
+        """Gets the MD5 hash of an object in Google Cloud Storage.
+
         :param bucket_name: The Google cloud storage bucket where the blob_name is.
         :type bucket_name: str
         :param object_name: The name of the object to check in the Google cloud
@@ -463,8 +461,8 @@ class GCSHook(GoogleCloudBaseHook):
         return blob_md5hash
 
     def insert_bucket_acl(self, bucket_name, entity, role, user_project=None):
-        """
-        Creates a new ACL entry on the specified bucket_name.
+        """Creates a new ACL entry on the specified bucket_name.
+
         See: https://cloud.google.com/storage/docs/json_api/v1/bucketAccessControls/insert
         :param bucket_name: Name of a bucket_name.
         :type bucket_name: str
@@ -494,8 +492,8 @@ class GCSHook(GoogleCloudBaseHook):
     def insert_object_acl(
         self, bucket_name, object_name, entity, role, generation=None, user_project=None
     ):
-        """
-        Creates a new ACL entry on the specified object.
+        """Creates a new ACL entry on the specified object.
+
         See: https://cloud.google.com/storage/docs/json_api/v1/objectAccessControls/insert
         :param bucket_name: Name of a bucket_name.
         :type bucket_name: str
@@ -553,7 +551,6 @@ class GCSHook(GoogleCloudBaseHook):
         :param destination_object: The path of the object if given.
         :type destination_object: str
         """
-
         if not source_objects:
             raise ValueError("source_objects cannot be empty.")
 
@@ -587,8 +584,8 @@ class GCSHook(GoogleCloudBaseHook):
         allow_overwrite: bool = False,
         delete_extra_files: bool = False,
     ):
-        """
-        Synchronizes the contents of the buckets.
+        """Synchronizes the contents of the buckets.
+
         Parameters ``source_object`` and ``destination_object`` describe the root sync directories. If they
         are not passed, the entire bucket will be synchronized. If they are passed, they should point
         to directories.
@@ -761,11 +758,8 @@ class GCSHook(GoogleCloudBaseHook):
 
 
 def _parse_gcs_url(gsurl):
-    """
-    Given a Google Cloud Storage URL (gs://<bucket>/<blob>), returns a
-    tuple containing the corresponding bucket and blob.
-    """
-
+    """Given a Google Cloud Storage URL (gs://<bucket>/<blob>), returns a tuple
+    containing the corresponding bucket and blob."""
     parsed_url = urlparse(gsurl)
     if not parsed_url.netloc:
         raise AirflowException("Please provide a bucket name")

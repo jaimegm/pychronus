@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import pandas as pd
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator, ShortCircuitOperator
-
 from pychronus.hooks.gsheet import GSheetHook
 
 default_args = {
