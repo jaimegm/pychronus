@@ -31,7 +31,7 @@ with dag:
 
     extract_lastfm = LastFmOperator(
         task_id="extract_lastfm",
-        database="jaime",
+        database="pythos",
         updated_at="timestamp",
         username="JaiMAliin",
         method="user.getrecenttracks",
