@@ -79,6 +79,7 @@ target/
 .ipynb_checkpoints
 *.ipynb
 .env
+.envrc
 .venv
 env/
 venv/

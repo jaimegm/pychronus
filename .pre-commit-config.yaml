@@ -15,16 +15,22 @@ repos:
       - id: terraform-fmt
         args: ["-recursive"]
   - repo: https://github.com/pycqa/isort
-    rev: 5.9.2
+    rev: 5.11.5
     hooks:
-      - id: isort
-        additional_dependencies: [toml]
+        - id: isort
+          # More info on black compatibility here:
+          # "https://pycqa.github.io/isort/docs/configuration/black_compatibility.html"
+          args: [--profile=black]
+          name: "[py   - format] isort"
   - repo: https://github.com/ambv/black
-    rev: 21.7b0
+    rev: 22.6.0
     hooks:
       - id: black
-        language_version: python3.8
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+        name: "[py   - format] black"
+        language_version: python3.9
+  - repo: https://github.com/PyCQA/flake8
+    rev: 5.0.0
     hooks:
       - id: flake8
+        name: "[py   - check] flake8"
+        language_version: python3.9
