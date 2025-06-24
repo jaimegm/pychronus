@@ -16,8 +16,6 @@ repos:
       name: "[file -  check] case conflict"
     - id: check-docstring-first
       name: "[py   -  check] docstring first"
-#    - id: check-executables-have-shebangs
-#      name: "[sh   -  check] executable shebang"
     - id: check-json
       name: "[json -  check] validate json"
     - id: check-merge-conflict
@@ -93,14 +91,14 @@ repos:
     hooks:
       - id: flake8
         name: "[py   - check] flake8"
-        language_version: python3.9
+        language_version: python3.11
 
   - repo: https://github.com/ambv/black
     rev: 22.6.0
     hooks:
       - id: black
         name: "[py   - format] black"
-        language_version: python3.9
+        language_version: python3.11
 
   # Bash auto-formatters and linters
   # --------------------------------

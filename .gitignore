@@ -129,3 +129,4 @@ variables.yaml
 
 # GCP
 account.json
+.vscode/
