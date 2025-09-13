@@ -16,7 +16,7 @@ default_args = {
 dag = DAG(
     "lastfm_scrobbles",
     default_args=default_args,
-    schedule_interval="* * * * *",
+    schedule_interval="0 0 * * *",
     catchup=False,
     max_active_runs=1,
 )
@@ -31,7 +31,7 @@ with dag:
 
     extract_lastfm = LastFmOperator(
         task_id="extract_lastfm",
-        database="pythos",
+        database="postgres",
         updated_at="timestamp",
         username="JaiMAliin",
         method="user.getrecenttracks",

@@ -35,9 +35,9 @@ class LastFmOperator(BaseOperator):
     def dbmanager(self) -> DBManager:
         if self._dbmanager is None:
             self._dbmanager = DBManager(
-                database=self.database,
                 tablename=self.tablename,
                 schema="raw",
+                database=self.database,
             )
         return self._dbmanager
 
@@ -47,12 +47,13 @@ class LastFmOperator(BaseOperator):
             self._lastfm_hook = LastFmHook(username=self.username, method=self.method)
         return self._lastfm_hook
 
-    def paginate(self, pause_duration: float = 0.4):
+    def paginate(self, pause_duration: float = 1):
         last_updated = (
-            self.dbmanager.get_last_updated_at()
+            int(self.dbmanager.get_last_updated_at(updated_at="datetime").timestamp())
             if self.dbmanager.table_exists()
             else None
         )
+
         init_request = self.lastfm_hook.make_request(updated_at=last_updated)
         # Get Page Count
         page_count = init_request["recenttracks"]["@attr"]["totalPages"]
@@ -65,11 +66,10 @@ class LastFmOperator(BaseOperator):
             response = self.lastfm_hook.make_request(
                 page=page, updated_at=last_updated
             )["recenttracks"]["track"]
+            extracted_scrobbles = self.get_extract_method(response)
+
             # Collect Parsed data
-            df = df.append(
-                # Parse data
-                self.get_extract_method(response)
-            )
+            df = pd.concat([extracted_scrobbles, df])
         return df
 
     def get_extract_method(self, data: List[Dict]) -> pd.DataFrame:
@@ -82,19 +82,33 @@ class LastFmOperator(BaseOperator):
 
     @staticmethod
     def extract_getrecenttracks(data: List) -> pd.DataFrame:
-        goods = [
-            {
-                "artist": scrobble["artist"]["#text"],
-                "artist_mbid": scrobble["artist"]["mbid"],
-                "album": scrobble["album"]["#text"],
-                "album_mbid": scrobble["album"]["mbid"],
-                "track": scrobble["name"],
-                "track_mbid": scrobble["mbid"],
-                "timestamp": scrobble["date"]["uts"],
-                "datetime": pd.to_datetime(int(scrobble["date"]["uts"]), unit="s"),
-            }
-            for scrobble in data
-        ]
+        goods = []
+        for scrobble in data:
+            try:
+                # Skip scrobbles that don't have a date field (e.g., currently playing tracks)
+                if "date" not in scrobble or not scrobble["date"]:
+                    continue
+
+                goods.append(
+                    {
+                        "artist": scrobble["artist"]["#text"],
+                        "artist_mbid": scrobble["artist"]["mbid"],
+                        "album": scrobble["album"]["#text"],
+                        "album_mbid": scrobble["album"]["mbid"],
+                        "track": scrobble["name"],
+                        "track_mbid": scrobble["mbid"],
+                        "timestamp": scrobble["date"]["uts"],
+                        "datetime": pd.to_datetime(
+                            int(scrobble["date"]["uts"]), unit="s"
+                        ),
+                    }
+                )
+            except KeyError as e:
+                # Skip scrobbles that raise KeyError (e.g., missing date field or malformed data)
+                if "date" in str(e):
+                    continue
+                else:
+                    raise e
         return pd.DataFrame(goods)
 
     def execute(self, context: Dict[str, Any]) -> Union[None, bool]:
