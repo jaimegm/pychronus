@@ -1,7 +1,6 @@
 # import pandas as pd
 from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
-
 from pychronus.hooks.dbmanager import DBManager
 from pychronus.hooks.pytrader import PyTrader
 

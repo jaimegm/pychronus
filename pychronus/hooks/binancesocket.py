@@ -5,9 +5,8 @@ from datetime import datetime
 
 from binance import ThreadedWebsocketManager
 from binance.client import Client
-from twisted.internet import reactor
-
 from pychronus.utils.misc import goodbyes, hellos, managers
+from twisted.internet import reactor
 
 
 class BinanceSocket:
@@ -56,7 +55,7 @@ class BinanceSocket:
         self.manager.stop()
 
     def message_processor(self, msg):
-        """define how to process incoming WebSocket messages"""
+        """Define how to process incoming WebSocket messages."""
         if msg["e"] != "error":
             self.data.append(
                 {"best_bid": msg["b"], "best_ask": msg["a"], "close?": msg["c"]}

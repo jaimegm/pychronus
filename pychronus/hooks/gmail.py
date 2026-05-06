@@ -48,7 +48,6 @@ class Gmail(BaseHook):
         return self.get_connection(self.conn_id)
 
     def get_token(self):
-
         server_json = self.read_json(credentials_path)["installed"]
         token_json = self.read_json(token_path)
         params = {

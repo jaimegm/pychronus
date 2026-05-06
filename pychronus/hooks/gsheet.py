@@ -10,11 +10,11 @@ from googleapiclient.discovery import build
 
 
 class GSheetHook(BaseHook):
-    """
-    Acceess Googles Spreadsheet API through this hook.
-    User 'login' to store client_id, 'password' for client_secret
-    and {"refresh_token": "your_refresh_token"} in extra field to provide the refresh token.
-    To obtain a refresh token with an existing client_id and client_secrect
+    """Acceess Googles Spreadsheet API through this hook.
+
+    User 'login' to store client_id, 'password' for client_secret and {"refresh_token":
+    "your_refresh_token"} in extra field to provide the refresh token. To obtain a
+    refresh token with an existing client_id and client_secrect
     """
 
     def __init__(self):  # pylint: disable=super-init-not-called
@@ -51,8 +51,7 @@ class GSheetHook(BaseHook):
         )  # pylint: disable=no-member
 
     def get_values(self, spreadsheet_id, range_, dimension="ROWS"):
-        """
-        Retrieve data from google spread sheet as a list of list.
+        """Retrieve data from google spread sheet as a list of list.
 
         :param spreadsheet_id: id of spreadsheet, find the id in the url of a spreadsheet.
         :type spreadsheet_id: str
@@ -75,10 +74,9 @@ class GSheetHook(BaseHook):
         )
 
     def get_values_df(self, spreadsheet_id, range_, shape_column=None):
-        """
-        Retrieve data as pandas.DataFrame. It assumes that the
-        first row of the data contains the column names.
-        Column names will be transformed (lower cased and hyphens are replaced by underscores)
+        """Retrieve data as pandas.DataFrame. It assumes that the first row of the data
+        contains the column names. Column names will be transformed (lower cased and
+        hyphens are replaced by underscores)
 
         :param spreadsheet_id: id of spreadsheet, find the id in the url of a spreadsheet.
         Such an url looks like https://docs.google.com/spreadsheets/d/<spreadsheet_id>?other_stuff=1
@@ -98,7 +96,7 @@ class GSheetHook(BaseHook):
         return pd.DataFrame(self.reshape(result, shape_column=shape_column))
 
     def truncate_values(self, spreadsheet_id, range_, header=True):
-        """Truncates Entire datarange, Its recommended to leave out header columns"""
+        """Truncates Entire datarange, Its recommended to leave out header columns."""
         if header:
             range_ = self.remove_header(range_)
 

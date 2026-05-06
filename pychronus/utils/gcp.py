@@ -4,7 +4,6 @@ import tempfile
 
 from airflow.models import Variable
 from google.cloud import bigquery
-
 from pychronus.hooks.gcs import GCSHook
 from pychronus.hooks.gsheet import GSheetHook
 
@@ -124,7 +123,7 @@ def translate_dtype(dtype, name):
 
 
 def make_bigquery_schema(df):
-    schema = list()
+    schema = []
     replacements = [
         (".", ""),
         ("&", ""),

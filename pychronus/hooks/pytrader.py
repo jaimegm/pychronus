@@ -5,7 +5,6 @@ from datetime import datetime
 
 import pandas as pd
 from binance.client import Client
-
 from pychronus.hooks.dbmanager import DBManager
 
 credential_path = "/root/creds/binance.json"
